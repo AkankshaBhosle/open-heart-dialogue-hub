@@ -2,6 +2,7 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { UserAvatar } from "@/components/user-avatar";
+import { Marquee } from "@/components/marquee";
 import { Heart, MessageCircle, ShieldCheck } from "lucide-react";
 
 const About = () => {
@@ -29,6 +30,9 @@ const About = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      
+      {/* Add Marquee right after the Navbar */}
+      <Marquee />
       
       <main className="flex-grow pt-20 pb-16">
         {/* Hero section */}
