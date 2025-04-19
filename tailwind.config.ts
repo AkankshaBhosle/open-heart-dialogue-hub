@@ -61,6 +61,23 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				hearmeout: {
+					purple: {
+						light: '#E5DEFF',
+						DEFAULT: '#9b87f5',
+						dark: '#6E59A5'
+					},
+					blue: {
+						light: '#D3E4FD',
+						DEFAULT: '#7A9BD9',
+						dark: '#4A6FB0'
+					},
+					green: {
+						light: '#F2FCE2',
+						DEFAULT: '#A5D6A7',
+						dark: '#75B277'
+					}
 				}
 			},
 			borderRadius: {
