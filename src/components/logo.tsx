@@ -1,5 +1,5 @@
 
-import { Heart } from "lucide-react";
+import { HandHeart } from "lucide-react";
 
 export const Logo = ({ size = "default" }: { size?: "small" | "default" | "large" }) => {
   const sizeClasses = {
@@ -10,11 +10,11 @@ export const Logo = ({ size = "default" }: { size?: "small" | "default" | "large
 
   return (
     <div className="flex items-center gap-2 group">
-      <Heart className={`
+      <HandHeart className={`
         ${sizeClasses[size]} 
         text-hearmeout-purple 
         transition-all duration-300 
-        group-hover:rotate-12 
+        group-hover:rotate-6 
         group-hover:scale-110 
         group-hover:text-hearmeout-purple-dark
       `} />
