@@ -1,5 +1,5 @@
 
-import { HandHeart } from "lucide-react";
+import { HandHelping } from "lucide-react";
 
 export const Logo = ({ size = "default" }: { size?: "small" | "default" | "large" }) => {
   const sizeClasses = {
@@ -10,7 +10,7 @@ export const Logo = ({ size = "default" }: { size?: "small" | "default" | "large
 
   return (
     <div className="flex items-center gap-2 group">
-      <HandHeart className={`
+      <HandHelping className={`
         ${sizeClasses[size]} 
         text-hearmeout-purple 
         transition-all duration-300 
