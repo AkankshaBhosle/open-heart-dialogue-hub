@@ -9,12 +9,19 @@ export const Logo = ({ size = "default" }: { size?: "small" | "default" | "large
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Heart className={`text-hearmeout-purple ${sizeClasses[size]}`} />
-      <span className={`font-bold ${sizeClasses[size]}`}>
-        <span className="text-hearmeout-purple">Hear</span>
-        <span className="text-hearmeout-blue-dark">Me</span>
-        <span className="text-hearmeout-purple">Out</span>
+    <div className="flex items-center gap-2 group">
+      <Heart className={`
+        ${sizeClasses[size]} 
+        text-hearmeout-purple 
+        transition-all duration-300 
+        group-hover:rotate-12 
+        group-hover:scale-110 
+        group-hover:text-hearmeout-purple-dark
+      `} />
+      <span className={`font-bold ${sizeClasses[size]} flex items-center`}>
+        <span className="text-hearmeout-purple transition-all duration-300 group-hover:text-opacity-70">Hear</span>
+        <span className="text-hearmeout-blue-dark mx-1 transition-all duration-300 group-hover:text-opacity-70">Me</span>
+        <span className="text-hearmeout-purple transition-all duration-300 group-hover:text-opacity-70">Out</span>
       </span>
     </div>
   );
