@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -110,7 +111,7 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				marquee: 'marquee 20s linear infinite',
+				marquee: 'marquee 30s linear infinite', // Slower animation for better readability
 			}
 		}
 	},
