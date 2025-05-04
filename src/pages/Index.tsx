@@ -42,8 +42,8 @@ const Index = () => {
               </div>
               <div className="flex justify-center">
                 <img 
-                  src="/lovable-uploads/2d9a92ec-3e84-4683-b9e3-8e44b8ed0258.png" 
-                  alt="Mental health illustration with brain and stethoscope" 
+                  src="/lovable-uploads/f3f1dfd2-2d7b-4336-a27f-30b8864627ee.jpg" 
+                  alt="Mental health support illustration" 
                   className="rounded-xl shadow-lg max-w-full h-auto"
                 />
               </div>
