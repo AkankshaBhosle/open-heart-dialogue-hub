@@ -8,6 +8,7 @@ import { Logo } from "@/components/logo";
 import { FeatureCard } from "@/components/feature-card";
 import { TestimonialCard } from "@/components/testimonial-card";
 import { CTABox } from "@/components/cta-box";
+import { Marquee } from "@/components/marquee";
 
 const Index = () => {
   return (
@@ -41,8 +42,8 @@ const Index = () => {
               </div>
               <div className="flex justify-center">
                 <img 
-                  src="https://images.unsplash.com/photo-1516585427167-9f4af9627e6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
-                  alt="People connecting" 
+                  src="/lovable-uploads/2d9a92ec-3e84-4683-b9e3-8e44b8ed0258.png" 
+                  alt="Mental health illustration with brain and stethoscope" 
                   className="rounded-xl shadow-lg max-w-full h-auto"
                 />
               </div>
