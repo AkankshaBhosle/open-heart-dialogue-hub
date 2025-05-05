@@ -8,21 +8,33 @@ import { Heart, MessageCircle, ShieldCheck } from "lucide-react";
 const About = () => {
   const team = [
     {
-      name: "Sarah Johnson",
-      role: "Founder & CEO",
-      bio: "Clinical psychologist with 15 years of experience. Founded HearMeOut to bring mental health support to everyone.",
+      name: "Akshaya Srija",
+      role: "Team Member",
+      bio: "",
       avatar: null
     },
     {
-      name: "Michael Chen",
-      role: "Chief Technology Officer",
-      bio: "Tech innovator focused on privacy and security. Built HearMeOut's anonymous connection platform.",
+      name: "Akanksha Bhosle",
+      role: "Team Member",
+      bio: "",
       avatar: null
     },
     {
-      name: "Dr. Amara Patel",
-      role: "Head of Therapy",
-      bio: "Oversees our therapist network and ensures all interactions follow clinical best practices.",
+      name: "Chavan Raju",
+      role: "Team Member",
+      bio: "",
+      avatar: null
+    },
+    {
+      name: "Hansik Reddy",
+      role: "Team Member",
+      bio: "",
+      avatar: null
+    },
+    {
+      name: "Dr. C. Jyotsna, Ph.D.",
+      role: "Mentor",
+      bio: "HOD and Professor, Department of Chemistry, VNRVJIET",
       avatar: null
     }
   ];
@@ -53,16 +65,16 @@ const About = () => {
               <div>
                 <h2 className="text-3xl font-bold mb-6">Our Story</h2>
                 <p className="text-gray-700 mb-4">
-                  HearMeOut began in 2023 when our founder, Sarah, realized how many people were suffering in silence 
-                  with emotional challenges but had nowhere to turn.
+                  HearMeOut was born as a project for our Design Thinking course, inspired by a simple but powerful idea — 
+                  to create a safe, anonymous space where anyone can share their feelings without fear of judgment.
                 </p>
                 <p className="text-gray-700 mb-4">
-                  Having worked as a clinical psychologist, she saw firsthand the power of simply being heard - 
-                  but also the barriers that prevented many from seeking help: cost, stigma, and access.
+                  Through empathy, research, and collaboration, we designed a platform that connects people 
+                  with listeners and therapists who truly care.
                 </p>
                 <p className="text-gray-700">
-                  We built HearMeOut to break down these barriers by creating a platform where anyone can connect 
-                  anonymously with supportive listeners or trained professionals, 24/7, from anywhere in the world.
+                  What started as an assignment quickly grew into a heartfelt mission to remind people: 
+                  you are heard, you are valued, and you are not alone.
                 </p>
               </div>
               <div className="flex justify-center">
@@ -121,20 +133,40 @@ const About = () => {
         {/* Team section */}
         <section className="py-16 px-4">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl font-bold mb-10 text-center">Meet Our Team</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center">Meet Our Team</h2>
+            <p className="text-center text-gray-700 mb-10 max-w-3xl mx-auto">
+              HearMeOut was crafted with compassion and creativity by:
+            </p>
             
-            <div className="grid md:grid-cols-3 gap-8">
-              {team.map((member, index) => (
-                <div key={index} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              {team.slice(0, 4).map((member, index) => (
+                <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
                   <div className="flex justify-center mb-4">
                     <UserAvatar size="lg" name={member.name} src={member.avatar} />
                   </div>
                   <h3 className="text-xl font-semibold mb-1">{member.name}</h3>
-                  <p className="text-hearmeout-purple font-medium mb-3">{member.role}</p>
-                  <p className="text-gray-600">{member.bio}</p>
+                  {member.role && <p className="text-hearmeout-purple font-medium">{member.role}</p>}
                 </div>
               ))}
             </div>
+            
+            <div className="text-center mb-8">
+              <p className="text-xl font-medium">Under the mentorship of</p>
+            </div>
+            
+            <div className="max-w-md mx-auto">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+                <div className="flex justify-center mb-4">
+                  <UserAvatar size="lg" name={team[4].name} src={team[4].avatar} />
+                </div>
+                <h3 className="text-xl font-semibold mb-1">{team[4].name}</h3>
+                {team[4].bio && <p className="text-gray-600 mt-1">{team[4].bio}</p>}
+              </div>
+            </div>
+            
+            <p className="text-center mt-10 text-gray-700">
+              Together, we brought this idea to life as part of our Design Thinking course — aiming to build a space where every voice matters.
+            </p>
           </div>
         </section>
       </main>

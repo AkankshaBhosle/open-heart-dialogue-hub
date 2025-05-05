@@ -6,7 +6,6 @@ import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { FeatureCard } from "@/components/feature-card";
-import { TestimonialCard } from "@/components/testimonial-card";
 import { CTABox } from "@/components/cta-box";
 import { Marquee } from "@/components/marquee";
 
@@ -87,36 +86,6 @@ const Index = () => {
                 icon={Users}
                 title="Choose Your Listener"
                 description="Opt for a regular person or a verified therapist based on your comfort and needs."
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials Section */}
-        <section className="py-16 px-4 bg-gray-50">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">What People Are Saying</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Real stories from people who found relief through connection
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <TestimonialCard 
-                quote="I was going through a tough breakup and just needed someone to listen. The anonymous connection helped me express things I couldn't tell my friends."
-                name="Alex"
-                title="User"
-              />
-              <TestimonialCard 
-                quote="As someone with social anxiety, I find it hard to open up in person. This platform gave me a way to share my feelings without the pressure."
-                name="Jamie"
-                title="User"
-              />
-              <TestimonialCard 
-                quote="I'm a therapist on the platform, and I'm amazed by how much more openly people communicate when they feel truly anonymous and safe."
-                name="Dr. Morgan"
-                title="Therapist"
               />
             </div>
           </div>
