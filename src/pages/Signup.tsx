@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
+import { useAuth } from "@/context/AuthContext";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -17,17 +18,38 @@ const Signup = () => {
   const [userType, setUserType] = useState("listener");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // If user is already logged in, redirect to dashboard
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!agreeTerms) {
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate signup process
-    setTimeout(() => {
+    try {
+      await signUp(email, password, userType, name);
+      navigate("/login", { 
+        state: { 
+          message: "Please check your email to verify your account before logging in." 
+        } 
+      });
+    } catch (error) {
+      console.error("Signup error:", error);
+    } finally {
       setIsLoading(false);
-      // Redirect would happen here after signup
-      console.log("Signed up with:", { name, email, password, userType, agreeTerms });
-    }, 1500);
+    }
   };
 
   return (

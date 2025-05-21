@@ -1,29 +1,42 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Logo } from "@/components/logo";
+import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // If user is already logged in, redirect to dashboard
+  React.useEffect(() => {
+    if (user) {
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, location]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      await signIn(email, password, rememberMe);
+      // No need to navigate here - the auth context will handle that
+    } catch (error) {
+      console.error("Login error:", error);
       setIsLoading(false);
-      // Redirect would happen here after authentication
-      console.log("Logged in with:", { email, password, rememberMe });
-    }, 1500);
+    }
   };
 
   return (

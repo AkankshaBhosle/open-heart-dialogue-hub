@@ -4,14 +4,16 @@ import { Link } from "react-router-dom";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
+import { useAuth } from "@/context/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 
-type NavbarProps = {
-  isLoggedIn?: boolean;
-  userName?: string;
-};
-
-export const Navbar = ({ isLoggedIn = false, userName }: NavbarProps) => {
+export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { profile } = useProfile();
+  
+  const isLoggedIn = !!user;
+  const userName = profile?.username || user?.email?.split('@')[0] || "User";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm px-4 py-3">
@@ -36,9 +38,20 @@ export const Navbar = ({ isLoggedIn = false, userName }: NavbarProps) => {
                 </Button>
               </Link>
               <Link to="/profile" className="flex items-center gap-2">
-                <span className="text-sm font-medium">{userName || "User"}</span>
-                <UserAvatar size="sm" name={userName} />
+                <span className="text-sm font-medium">{userName}</span>
+                <UserAvatar 
+                  size="sm" 
+                  name={userName} 
+                  isTherapist={profile?.is_therapist || false}
+                />
               </Link>
+              <Button 
+                variant="outline" 
+                className="text-gray-600"
+                onClick={() => signOut()}
+              >
+                Log out
+              </Button>
             </div>
           ) : (
             <div className="flex items-center gap-3">
@@ -90,9 +103,20 @@ export const Navbar = ({ isLoggedIn = false, userName }: NavbarProps) => {
                   Dashboard
                 </Link>
                 <Link to="/profile" className="flex items-center gap-2 py-2">
-                  <UserAvatar size="sm" name={userName} />
-                  <span className="text-sm font-medium">{userName || "User"}</span>
+                  <UserAvatar 
+                    size="sm" 
+                    name={userName} 
+                    isTherapist={profile?.is_therapist || false}
+                  />
+                  <span className="text-sm font-medium">{userName}</span>
                 </Link>
+                <Button 
+                  variant="outline" 
+                  className="text-gray-600 w-full justify-start"
+                  onClick={() => signOut()}
+                >
+                  Log out
+                </Button>
               </>
             ) : (
               <>

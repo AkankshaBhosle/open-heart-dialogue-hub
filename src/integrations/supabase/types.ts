@@ -9,7 +9,130 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      conversation_participants: {
+        Row: {
+          conversation_id: string | null
+          id: string
+          joined_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          id?: string
+          joined_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          id?: string
+          joined_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_message_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_message_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_message_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string | null
+          id: string
+          read_at: string | null
+          sender_id: string | null
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          read_at?: string | null
+          sender_id?: string | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          read_at?: string | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          id: string
+          is_available: boolean | null
+          is_online: boolean | null
+          is_therapist: boolean | null
+          updated_at: string | null
+          user_type: string
+          username: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          id: string
+          is_available?: boolean | null
+          is_online?: boolean | null
+          is_therapist?: boolean | null
+          updated_at?: string | null
+          user_type: string
+          username?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          is_available?: boolean | null
+          is_online?: boolean | null
+          is_therapist?: boolean | null
+          updated_at?: string | null
+          user_type?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

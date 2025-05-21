@@ -1,75 +1,135 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, MessageCircle, Settings, User, Volume, Bell } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useProfile, Profile } from "@/hooks/useProfile";
+import { useConversation } from "@/hooks/useConversation";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const { profile, updateProfile } = useProfile();
+  const { fetchUserConversations, createConversation } = useConversation();
   const [isOnline, setIsOnline] = useState(false);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<Profile[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const navigate = useNavigate();
   
-  // Mock user data
-  const user = {
-    name: "Alex Johnson",
-    joinDate: "March 2023",
-    isTherapist: false
+  // Fetch conversations
+  useEffect(() => {
+    const loadConversations = async () => {
+      if (user) {
+        const data = await fetchUserConversations();
+        setConversations(data || []);
+      }
+    };
+    
+    loadConversations();
+  }, [user]);
+  
+  // Toggle online status
+  useEffect(() => {
+    if (profile) {
+      setIsOnline(profile.is_online || false);
+    }
+  }, [profile]);
+  
+  const handleOnlineToggle = () => {
+    const newStatus = !isOnline;
+    setIsOnline(newStatus);
+    if (profile) {
+      updateProfile({ is_online: newStatus, is_available: newStatus });
+    }
+  };
+
+  // Fetch available users for connection
+  const fetchAvailableUsers = async () => {
+    if (!user) return;
+    
+    setIsLoadingUsers(true);
+    
+    try {
+      // Get all available users except current user
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .neq("id", user.id)
+        .eq("is_available", true);
+      
+      if (error) throw error;
+      
+      setAvailableUsers(data as Profile[]);
+    } catch (err) {
+      console.error("Error fetching available users:", err);
+    } finally {
+      setIsLoadingUsers(false);
+    }
   };
   
-  // Mock conversations
-  const conversations = [
-    {
-      id: 1,
-      with: "Jamie",
-      lastMessage: "Thanks for listening to me yesterday.",
-      date: "Today, 2:30 PM",
-      isTherapist: false,
-      unread: 2
-    },
-    {
-      id: 2,
-      with: "Dr. Morgan",
-      lastMessage: "Remember the breathing exercises we discussed.",
-      date: "Yesterday",
-      isTherapist: true,
-      unread: 0
-    },
-    {
-      id: 3,
-      with: "Taylor",
-      lastMessage: "It really helped to talk about this.",
-      date: "Mon, 10:15 AM",
-      isTherapist: false,
-      unread: 0
+  // Create a new conversation with a user
+  const startConversation = async (userId: string) => {
+    if (!user) return;
+    
+    try {
+      const conversationId = await createConversation(userId);
+      
+      if (conversationId) {
+        navigate(`/chat/${conversationId}`);
+      }
+    } catch (err) {
+      console.error("Error creating conversation:", err);
     }
-  ];
+  };
   
-  // Mock activity
-  const activity = [
-    {
-      id: 1,
-      type: "conversation",
-      description: "20-minute conversation with Dr. Morgan",
-      date: "Today, 3:45 PM"
-    },
-    {
-      id: 2,
-      type: "feedback",
-      description: "You received positive feedback from Jamie",
-      date: "Yesterday, 5:20 PM"
-    },
-    {
-      id: 3,
-      type: "milestone",
-      description: "You've completed 5 conversations!",
-      date: "Mon, 10:30 AM"
-    }
-  ];
+  // Listen for changes in available users
+  useEffect(() => {
+    fetchAvailableUsers();
+    
+    const channel = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE', 
+          schema: 'public',
+          table: 'profiles',
+          filter: 'is_available=eq.true'
+        },
+        (payload) => {
+          // Refresh available users when someone becomes available
+          fetchAvailableUsers();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-4 border-hearmeout-purple border-t-transparent rounded-full"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar isLoggedIn userName={user.name} />
+      <Navbar />
       
       <main className="flex-grow pt-20 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
@@ -77,12 +137,14 @@ const Dashboard = () => {
             <div className="flex items-center gap-4">
               <UserAvatar 
                 size="lg" 
-                name={user.name} 
-                isTherapist={user.isTherapist} 
+                name={profile.username} 
+                isTherapist={profile.is_therapist} 
               />
               <div>
-                <h1 className="text-2xl font-bold">Welcome back, {user.name.split(' ')[0]}</h1>
-                <p className="text-gray-600">Member since {user.joinDate}</p>
+                <h1 className="text-2xl font-bold">Welcome back, {profile.username?.split(" ")[0] || "User"}</h1>
+                <p className="text-gray-600">
+                  {profile.user_type === "therapist" ? "Therapist" : "Member"} since {new Date(profile.created_at).toLocaleDateString()}
+                </p>
               </div>
             </div>
             
@@ -90,14 +152,16 @@ const Dashboard = () => {
               <Button 
                 variant={isOnline ? "default" : "outline"}
                 className={isOnline ? "bg-hearmeout-green hover:bg-hearmeout-green-dark" : ""}
-                onClick={() => setIsOnline(!isOnline)}
+                onClick={handleOnlineToggle}
               >
                 {isOnline ? "Online" : "Go Online"}
               </Button>
               
-              <Button variant="outline" size="icon">
-                <Settings className="h-5 w-5" />
-              </Button>
+              <Link to="/profile">
+                <Button variant="outline" size="icon">
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </Link>
               
               <Button variant="outline" size="icon">
                 <Bell className="h-5 w-5" />
@@ -107,7 +171,7 @@ const Dashboard = () => {
           
           <Tabs defaultValue="connect">
             <TabsList className="mb-6">
-              <TabsTrigger value="connect">
+              <TabsTrigger value="connect" onClick={fetchAvailableUsers}>
                 <Heart className="mr-2 h-4 w-4" />
                 Connect Now
               </TabsTrigger>
@@ -136,7 +200,10 @@ const Dashboard = () => {
                     <p className="text-gray-600 mb-4">
                       Connect with a random person who's ready to listen right now
                     </p>
-                    <Button className="mt-auto bg-hearmeout-purple hover:bg-hearmeout-purple-dark">
+                    <Button 
+                      className="mt-auto bg-hearmeout-purple hover:bg-hearmeout-purple-dark"
+                      onClick={fetchAvailableUsers}
+                    >
                       Find Someone
                     </Button>
                   </div>
@@ -147,18 +214,60 @@ const Dashboard = () => {
                     <p className="text-gray-600 mb-4">
                       Talk to a licensed professional for more structured support
                     </p>
-                    <Button className="mt-auto bg-hearmeout-green hover:bg-hearmeout-green-dark">
+                    <Button 
+                      className="mt-auto bg-hearmeout-green hover:bg-hearmeout-green-dark"
+                      onClick={() => {
+                        fetchAvailableUsers();
+                        toast.info("Searching for available therapists...");
+                      }}
+                    >
                       Find a Therapist
                     </Button>
                   </div>
                 </div>
                 
-                <div className="mt-6 p-4 rounded-lg bg-gray-50">
-                  <h3 className="font-medium mb-2">Your Preferences</h3>
-                  <p className="text-sm text-gray-600">
-                    You can update your matching preferences in your profile settings.
-                  </p>
-                </div>
+                {/* Available Users List */}
+                {isLoadingUsers ? (
+                  <div className="mt-6 flex justify-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-hearmeout-purple border-t-transparent rounded-full"></div>
+                  </div>
+                ) : availableUsers.length > 0 ? (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-medium mb-4">Available Now</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {availableUsers.map((availableUser) => (
+                        <div 
+                          key={availableUser.id} 
+                          className="p-4 border rounded-lg flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <UserAvatar 
+                              name={availableUser.username || "User"}
+                              isTherapist={availableUser.is_therapist}
+                            />
+                            <div>
+                              <h4 className="font-medium">{availableUser.username}</h4>
+                              <p className="text-sm text-gray-600">
+                                {availableUser.user_type === "therapist" ? "Therapist" : "Listener"}
+                              </p>
+                            </div>
+                          </div>
+                          <Button 
+                            size="sm"
+                            className="bg-hearmeout-purple hover:bg-hearmeout-purple-dark"
+                            onClick={() => startConversation(availableUser.id)}
+                          >
+                            Connect
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-6 p-4 text-center rounded-lg bg-gray-50">
+                    <p>No users are available right now. Please check again soon.</p>
+                  </div>
+                )}
               </div>
               
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -188,44 +297,58 @@ const Dashboard = () => {
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h2 className="text-xl font-semibold mb-4">Your Conversations</h2>
                 
-                <div className="divide-y">
-                  {conversations.map((convo) => (
-                    <div key={convo.id} className="py-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <UserAvatar 
-                          name={convo.with} 
-                          isTherapist={convo.isTherapist} 
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium">{convo.with}</h3>
-                            {convo.isTherapist && (
-                              <span className="bg-hearmeout-green-light text-hearmeout-green-dark text-xs px-2 py-0.5 rounded-full">
-                                Therapist
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 line-clamp-1">{convo.lastMessage}</p>
-                          <p className="text-xs text-gray-500">{convo.date}</p>
-                        </div>
-                      </div>
+                {conversations.length > 0 ? (
+                  <div className="divide-y">
+                    {conversations.map((convo) => {
+                      // Find the other participant
+                      const otherParticipant = convo.participants?.find(
+                        (p: any) => p.user_id !== user?.id
+                      );
+                      const otherUserName = otherParticipant?.profile?.username || "User";
+                      const isTherapist = otherParticipant?.profile?.is_therapist || false;
                       
-                      <div className="flex items-center gap-3">
-                        {convo.unread > 0 && (
-                          <span className="bg-hearmeout-purple text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                            {convo.unread}
-                          </span>
-                        )}
-                        <Button variant="outline" size="sm">Open</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {conversations.length === 0 && (
+                      return (
+                        <div key={convo.id} className="py-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <UserAvatar 
+                              name={otherUserName}
+                              isTherapist={isTherapist}
+                            />
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium">{otherUserName}</h3>
+                                {isTherapist && (
+                                  <span className="bg-hearmeout-green-light text-hearmeout-green-dark text-xs px-2 py-0.5 rounded-full">
+                                    Therapist
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                {new Date(convo.last_message_at).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <Link to={`/chat/${convo.id}`}>
+                            <Button variant="outline" size="sm">Open</Button>
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
                   <div className="py-8 text-center">
                     <p className="text-gray-500">No conversations yet</p>
-                    <Button variant="link" className="mt-2 text-hearmeout-purple">
+                    <Button 
+                      variant="link" 
+                      className="mt-2 text-hearmeout-purple"
+                      onClick={() => {
+                        const connectTab = document.querySelector('[data-value="connect"]');
+                        if (connectTab instanceof HTMLElement) {
+                          connectTab.click();
+                        }
+                      }}
+                    >
                       Start a new conversation
                     </Button>
                   </div>
@@ -237,23 +360,30 @@ const Dashboard = () => {
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
                 
-                <div className="divide-y">
-                  {activity.map((item) => (
-                    <div key={item.id} className="py-4 flex items-start gap-4">
-                      <div className="w-10 h-10 flex-shrink-0 rounded-full bg-hearmeout-purple-light flex items-center justify-center">
-                        {item.type === "conversation" && <MessageCircle className="h-5 w-5 text-hearmeout-purple" />}
-                        {item.type === "feedback" && <Heart className="h-5 w-5 text-hearmeout-purple" />}
-                        {item.type === "milestone" && <Volume className="h-5 w-5 text-hearmeout-purple" />}
-                      </div>
-                      <div>
-                        <p className="text-gray-800">{item.description}</p>
-                        <p className="text-sm text-gray-500">{item.date}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {activity.length === 0 && (
+                {conversations.length > 0 ? (
+                  <div className="divide-y">
+                    {conversations.slice(0, 3).map((convo: any) => {
+                      const otherParticipant = convo.participants?.find(
+                        (p: any) => p.user_id !== user?.id
+                      );
+                      const otherUserName = otherParticipant?.profile?.username || "User";
+                      
+                      return (
+                        <div key={convo.id} className="py-4 flex items-start gap-4">
+                          <div className="w-10 h-10 flex-shrink-0 rounded-full bg-hearmeout-purple-light flex items-center justify-center">
+                            <MessageCircle className="h-5 w-5 text-hearmeout-purple" />
+                          </div>
+                          <div>
+                            <p className="text-gray-800">Conversation with {otherUserName}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(convo.last_message_at).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
                   <div className="py-8 text-center">
                     <p className="text-gray-500">No activity yet</p>
                   </div>
@@ -263,18 +393,23 @@ const Dashboard = () => {
             
             <TabsContent value="profile">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Your Profile</h2>
+                  <Link to="/profile">
+                    <Button className="bg-hearmeout-purple hover:bg-hearmeout-purple-dark">
+                      Edit Profile
+                    </Button>
+                  </Link>
+                </div>
                 
                 <div className="flex flex-col sm:flex-row gap-8">
                   <div className="flex flex-col items-center">
                     <UserAvatar 
                       size="lg" 
-                      name={user.name} 
-                      isTherapist={user.isTherapist} 
+                      name={profile.username} 
+                      isTherapist={profile.is_therapist} 
                     />
-                    <Button variant="link" className="mt-2 text-hearmeout-purple">
-                      Change photo
-                    </Button>
+                    <p className="mt-2 text-sm font-medium">{profile.user_type}</p>
                   </div>
                   
                   <div className="flex-grow">
@@ -283,15 +418,17 @@ const Dashboard = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Display Name
                         </label>
-                        <Input defaultValue={user.name} className="mb-4" />
+                        <div className="p-2 border rounded-md bg-gray-50">
+                          {profile.username || "Not set"}
+                        </div>
                       </div>
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Account Type
                         </label>
-                        <div className="h-10 px-3 rounded-md border border-input bg-background flex items-center text-gray-500">
-                          {user.isTherapist ? "Therapist" : "Listener"}
+                        <div className="p-2 border rounded-md bg-gray-50">
+                          {profile.is_therapist ? "Therapist" : profile.user_type || "User"}
                         </div>
                       </div>
                     </div>
@@ -300,51 +437,12 @@ const Dashboard = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Bio
                       </label>
-                      <Textarea 
-                        placeholder="Tell others a bit about yourself..." 
-                        className="resize-none mb-4" 
-                      />
+                      <div className="p-2 border rounded-md bg-gray-50 min-h-[100px]">
+                        {profile.bio || "No bio provided yet."}
+                      </div>
                     </div>
-                    
-                    <Button className="mt-2 bg-hearmeout-purple hover:bg-hearmeout-purple-dark">
-                      Save Changes
-                    </Button>
                   </div>
                 </div>
-              </div>
-              
-              <div className="mt-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 className="text-xl font-semibold mb-4">Preferences</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">Notification sounds</h3>
-                      <p className="text-sm text-gray-600">Play sounds for new messages and notifications</p>
-                    </div>
-                    <Switch />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">Email notifications</h3>
-                      <p className="text-sm text-gray-600">Receive emails about new conversations and updates</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">Anonymous mode</h3>
-                      <p className="text-sm text-gray-600">Hide your display name during conversations</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </div>
-                
-                <Button className="mt-6 bg-hearmeout-purple hover:bg-hearmeout-purple-dark">
-                  Save Preferences
-                </Button>
               </div>
             </TabsContent>
           </Tabs>
@@ -353,49 +451,6 @@ const Dashboard = () => {
       
       <Footer />
     </div>
-  );
-};
-
-// Define missing components to avoid errors
-const Textarea = ({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => {
-  return (
-    <textarea
-      className={`flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-      {...props}
-    />
-  );
-};
-
-const Input = ({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
-  return (
-    <input
-      className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-      {...props}
-    />
-  );
-};
-
-const Switch = ({ defaultChecked = false }) => {
-  const [checked, setChecked] = useState(defaultChecked);
-  
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => setChecked(!checked)}
-      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-hearmeout-purple focus:ring-offset-2 ${
-        checked ? 'bg-hearmeout-purple' : 'bg-gray-200'
-      }`}
-    >
-      <span className="sr-only">Toggle</span>
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-5' : 'translate-x-0'
-        }`}
-      />
-    </button>
   );
 };
 

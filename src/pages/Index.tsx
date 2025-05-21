@@ -8,8 +8,11 @@ import { Logo } from "@/components/logo";
 import { FeatureCard } from "@/components/feature-card";
 import { CTABox } from "@/components/cta-box";
 import { Marquee } from "@/components/marquee";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -27,11 +30,19 @@ const Index = () => {
                   Connect anonymously with supportive listeners or trained therapists who are ready to hear you out, without judgment.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/signup">
-                    <Button size="lg" className="bg-hearmeout-purple hover:bg-hearmeout-purple-dark text-white w-full sm:w-auto">
-                      Get Started
-                    </Button>
-                  </Link>
+                  {user ? (
+                    <Link to="/dashboard">
+                      <Button size="lg" className="bg-hearmeout-purple hover:bg-hearmeout-purple-dark text-white w-full sm:w-auto">
+                        Go to Dashboard
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/signup">
+                      <Button size="lg" className="bg-hearmeout-purple hover:bg-hearmeout-purple-dark text-white w-full sm:w-auto">
+                        Get Started
+                      </Button>
+                    </Link>
+                  )}
                   <Link to="/how-it-works">
                     <Button size="lg" variant="outline" className="w-full sm:w-auto">
                       How It Works
@@ -97,8 +108,8 @@ const Index = () => {
             <CTABox 
               title="Ready to be heard?"
               description="Join thousands who are finding relief through authentic connection."
-              buttonText="Sign Up Free"
-              buttonLink="/signup"
+              buttonText={user ? "Go to Dashboard" : "Sign Up Free"}
+              buttonLink={user ? "/dashboard" : "/signup"}
               icon={<Logo size="small" />}
             />
           </div>
