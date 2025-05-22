@@ -36,9 +36,9 @@ export const useProfile = (userId?: string) => {
       setError(null);
 
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", profileId)
+        .from('profiles')
+        .select('*')
+        .eq('id', profileId)
         .single();
 
       if (error) {
@@ -65,12 +65,12 @@ export const useProfile = (userId?: string) => {
       setError(null);
 
       const { error } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id);
+        .eq('id', user.id);
 
       if (error) {
         throw error;
@@ -92,9 +92,9 @@ export const useProfile = (userId?: string) => {
 
     try {
       await supabase
-        .from("profiles")
+        .from('profiles')
         .update({ is_online: isOnline })
-        .eq("id", user.id);
+        .eq('id', user.id);
     } catch (err) {
       console.error("Error updating online status:", err);
     }

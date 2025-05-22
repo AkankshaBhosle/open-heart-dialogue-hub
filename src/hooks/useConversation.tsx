@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
 export type Message = {
   id: string;
@@ -49,9 +50,9 @@ export const useConversation = (conversationId?: string) => {
       setError(null);
 
       const { data, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("id", id)
+        .from('conversations')
+        .select('*')
+        .eq('id', id)
         .single();
 
       if (error) {
@@ -79,9 +80,9 @@ export const useConversation = (conversationId?: string) => {
 
       // Get conversation IDs where the user is a participant
       const { data: participantData, error: participantError } = await supabase
-        .from("conversation_participants")
-        .select("conversation_id")
-        .eq("user_id", user.id);
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
 
       if (participantError) {
         throw participantError;
@@ -95,7 +96,7 @@ export const useConversation = (conversationId?: string) => {
 
       // Get the conversations with these IDs
       const { data, error } = await supabase
-        .from("conversations")
+        .from('conversations')
         .select(`
           *,
           participants:conversation_participants(
@@ -103,8 +104,8 @@ export const useConversation = (conversationId?: string) => {
             profile:profiles(username, is_therapist, user_type)
           )
         `)
-        .in("id", conversationIds)
-        .order("last_message_at", { ascending: false });
+        .in('id', conversationIds)
+        .order('last_message_at', { ascending: false });
 
       if (error) {
         throw error;
@@ -124,12 +125,12 @@ export const useConversation = (conversationId?: string) => {
   const fetchParticipants = async (id: string) => {
     try {
       const { data, error } = await supabase
-        .from("conversation_participants")
+        .from('conversation_participants')
         .select(`
           *,
           profile:profiles(username, is_therapist, user_type)
         `)
-        .eq("conversation_id", id);
+        .eq('conversation_id', id);
 
       if (error) {
         throw error;
@@ -145,10 +146,10 @@ export const useConversation = (conversationId?: string) => {
   const fetchMessages = async (id: string) => {
     try {
       const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", id)
-        .order("created_at", { ascending: true });
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', id)
+        .order('created_at', { ascending: true });
 
       if (error) {
         throw error;
@@ -169,12 +170,12 @@ export const useConversation = (conversationId?: string) => {
 
     try {
       const { error } = await supabase
-        .from("messages")
+        .from('messages')
         .insert([
           {
             conversation_id: conversationId,
             sender_id: user.id,
-            content,
+            content: content.trim(),
           },
         ]);
 
@@ -184,9 +185,9 @@ export const useConversation = (conversationId?: string) => {
 
       // Update the last message timestamp in the conversation
       await supabase
-        .from("conversations")
+        .from('conversations')
         .update({ last_message_at: new Date().toISOString() })
-        .eq("id", conversationId);
+        .eq('id', conversationId);
 
     } catch (err: any) {
       console.error("Error sending message:", err);
@@ -204,18 +205,18 @@ export const useConversation = (conversationId?: string) => {
     try {
       // First check if a conversation already exists between these users
       const { data: existingParticipants } = await supabase
-        .from("conversation_participants")
-        .select("conversation_id")
-        .eq("user_id", user.id);
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
 
       if (existingParticipants && existingParticipants.length > 0) {
         const existingConversationIds = existingParticipants.map(p => p.conversation_id);
         
         const { data: otherParticipants } = await supabase
-          .from("conversation_participants")
-          .select("conversation_id")
-          .eq("user_id", otherUserId)
-          .in("conversation_id", existingConversationIds);
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', otherUserId)
+          .in('conversation_id', existingConversationIds);
 
         if (otherParticipants && otherParticipants.length > 0) {
           // Conversation already exists
@@ -225,7 +226,7 @@ export const useConversation = (conversationId?: string) => {
 
       // Create a new conversation
       const { data: conversationData, error: conversationError } = await supabase
-        .from("conversations")
+        .from('conversations')
         .insert([{}])
         .select();
 
@@ -237,7 +238,7 @@ export const useConversation = (conversationId?: string) => {
 
       // Add both users as participants
       const { error: participantsError } = await supabase
-        .from("conversation_participants")
+        .from('conversation_participants')
         .insert([
           { conversation_id: newConversationId, user_id: user.id },
           { conversation_id: newConversationId, user_id: otherUserId },
@@ -262,11 +263,11 @@ export const useConversation = (conversationId?: string) => {
 
     try {
       const { error } = await supabase
-        .from("messages")
+        .from('messages')
         .update({ read_at: new Date().toISOString() })
-        .eq("conversation_id", conversationId)
-        .neq("sender_id", user.id)
-        .is("read_at", null);
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id)
+        .is('read_at', null);
 
       if (error) {
         throw error;
