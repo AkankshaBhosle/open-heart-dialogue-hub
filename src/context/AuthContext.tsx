@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
       
-      // Fix: Use the correct Auth v2 API structure
+      // Fix: Remove persistSession option as it's not supported in the current version
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password

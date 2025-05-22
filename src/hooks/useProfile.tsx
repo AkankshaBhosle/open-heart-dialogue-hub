@@ -6,12 +6,12 @@ import { toast } from "sonner";
 
 export type Profile = {
   id: string;
-  username: string;
+  username: string | null;
   user_type: "listener" | "supporter" | "therapist";
-  is_therapist: boolean;
+  is_therapist: boolean | null;
   bio: string | null;
-  is_online: boolean;
-  is_available: boolean;
+  is_online: boolean | null;
+  is_available: boolean | null;
   created_at: string;
   updated_at: string;
 };

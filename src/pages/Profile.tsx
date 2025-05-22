@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -47,7 +48,7 @@ const Profile = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar isLoggedIn userName={profile?.username} />
+        <Navbar />
         <div className="flex-grow flex items-center justify-center">
           <div className="animate-spin h-8 w-8 border-4 border-hearmeout-purple border-t-transparent rounded-full"></div>
         </div>
@@ -58,7 +59,7 @@ const Profile = () => {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar isLoggedIn userName={profile?.username} />
+      <Navbar />
       
       <main className="flex-grow pt-20 pb-16 px-4">
         <div className="max-w-3xl mx-auto">

@@ -29,10 +29,10 @@ export type ConversationParticipant = {
   conversation_id: string;
   joined_at: string;
   profile?: {
-    username: string;
-    is_therapist: boolean;
+    username: string | null;
+    is_therapist: boolean | null;
     user_type: string;
-  };
+  } | null;
 };
 
 export const useConversation = (conversationId?: string) => {
@@ -111,7 +111,8 @@ export const useConversation = (conversationId?: string) => {
         throw error;
       }
 
-      return data as (Conversation & { participants: ConversationParticipant[] })[];
+      // Fix: Handle the type conversion safely
+      return (data as unknown) as (Conversation & { participants: ConversationParticipant[] })[];
     } catch (err: any) {
       console.error("Error fetching user conversations:", err);
       setError(err.message);
@@ -136,7 +137,8 @@ export const useConversation = (conversationId?: string) => {
         throw error;
       }
 
-      setParticipants(data as ConversationParticipant[]);
+      // Fix: Handle the type conversion safely
+      setParticipants((data as unknown) as ConversationParticipant[]);
     } catch (err: any) {
       console.error("Error fetching participants:", err);
     }
