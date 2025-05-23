@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
 
 export type Message = {
   id: string;
@@ -111,7 +110,6 @@ export const useConversation = (conversationId?: string) => {
         throw error;
       }
 
-      // Fix: Handle the type conversion safely
       return (data as unknown) as (Conversation & { participants: ConversationParticipant[] })[];
     } catch (err: any) {
       console.error("Error fetching user conversations:", err);
@@ -137,7 +135,6 @@ export const useConversation = (conversationId?: string) => {
         throw error;
       }
 
-      // Fix: Handle the type conversion safely
       setParticipants((data as unknown) as ConversationParticipant[]);
     } catch (err: any) {
       console.error("Error fetching participants:", err);
@@ -163,15 +160,27 @@ export const useConversation = (conversationId?: string) => {
     }
   };
 
-  // Send a new message
+  // Send a new message with immediate optimistic update
   const sendMessage = async (content: string) => {
     if (!user?.id || !conversationId || !content.trim()) {
       toast.error("Cannot send message");
       return;
     }
 
+    // Optimistic update - add message immediately
+    const tempMessage: Message = {
+      id: `temp-${Date.now()}`,
+      content: content.trim(),
+      sender_id: user.id,
+      conversation_id: conversationId,
+      created_at: new Date().toISOString(),
+      read_at: null,
+    };
+
+    setMessages(current => [...current, tempMessage]);
+
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert([
           {
@@ -179,11 +188,20 @@ export const useConversation = (conversationId?: string) => {
             sender_id: user.id,
             content: content.trim(),
           },
-        ]);
+        ])
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
+
+      // Replace temp message with real message
+      setMessages(current => 
+        current.map(msg => 
+          msg.id === tempMessage.id ? data as Message : msg
+        )
+      );
 
       // Update the last message timestamp in the conversation
       await supabase
@@ -194,6 +212,10 @@ export const useConversation = (conversationId?: string) => {
     } catch (err: any) {
       console.error("Error sending message:", err);
       toast.error("Failed to send message");
+      // Remove the optimistic message on error
+      setMessages(current => 
+        current.filter(msg => msg.id !== tempMessage.id)
+      );
     }
   };
 
@@ -250,7 +272,7 @@ export const useConversation = (conversationId?: string) => {
         throw participantsError;
       }
 
-      toast.success("Conversation created");
+      toast.success("Conversation created successfully!");
       return newConversationId;
     } catch (err: any) {
       console.error("Error creating conversation:", err);
@@ -272,7 +294,7 @@ export const useConversation = (conversationId?: string) => {
         .is('read_at', null);
 
       if (error) {
-        throw error;
+        console.error("Error marking messages as read:", error);
       }
     } catch (err: any) {
       console.error("Error marking messages as read:", err);
@@ -295,21 +317,31 @@ export const useConversation = (conversationId?: string) => {
             filter: `conversation_id=eq.${conversationId}`,
           },
           (payload) => {
-            setMessages((current) => [...current, payload.new as Message]);
-            // Mark message as read if it's not from the current user
-            if (payload.new.sender_id !== user?.id) {
+            console.log("New message received:", payload.new);
+            const newMessage = payload.new as Message;
+            
+            // Only add if it's not from the current user (to avoid duplicates from optimistic updates)
+            if (newMessage.sender_id !== user?.id) {
+              setMessages((current) => {
+                // Check if message already exists
+                const exists = current.some(msg => msg.id === newMessage.id);
+                if (exists) return current;
+                return [...current, newMessage];
+              });
+              
+              // Mark as read if it's not from the current user
               setTimeout(() => {
                 markMessagesAsRead();
-              }, 0);
+              }, 100);
             }
           }
         )
         .subscribe();
 
-      // Mark messages as read when conversation is opened
-      markMessagesAsRead();
+      console.log("Subscribed to real-time messages for conversation:", conversationId);
 
       return () => {
+        console.log("Unsubscribing from real-time messages");
         supabase.removeChannel(messagesChannel);
       };
     }
