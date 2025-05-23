@@ -7,6 +7,7 @@ import { useConversation } from '@/hooks/useConversation';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from 'sonner';
 import { MessageCircle, Users } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const QuickStartChat = () => {
   const navigate = useNavigate();
@@ -23,18 +24,60 @@ const QuickStartChat = () => {
 
     setIsCreating(true);
     try {
-      // For demo purposes, we'll create a test conversation
-      // In a real app, you'd look up the user by email first
+      console.log("Starting chat with:", friendEmail);
       
-      // For now, let's create a demo conversation with a mock user ID
-      const mockFriendId = "demo-friend-" + Date.now();
+      // Check if this email exists in auth.users
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .ilike('username', `%${friendEmail}%`)
+        .limit(1);
+      
+      console.log("User search results:", userData);
+      
+      let friendId;
+      
+      if (userError) {
+        console.error("Error finding user:", userError);
+      }
+      
+      if (userData && userData.length > 0) {
+        // Use the existing user's ID
+        friendId = userData[0].id;
+        console.log("Found existing user:", friendId);
+      } else {
+        // For demo purposes, create a mock user ID
+        friendId = `demo-friend-${Date.now()}`;
+        console.log("Created mock user ID:", friendId);
+        
+        // For demo purposes, create a mock profile entry
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: friendId,
+              username: friendEmail,
+              user_type: 'listener'
+            }
+          ]);
+        
+        if (profileError) {
+          console.error("Error creating mock profile:", profileError);
+          toast.error("Error creating mock profile: " + profileError.message);
+        }
+      }
+      
+      console.log("Creating conversation with user ID:", friendId);
       
       // Create conversation
-      const conversationId = await createConversation(mockFriendId);
+      const conversationId = await createConversation(friendId);
+      console.log("Conversation created with ID:", conversationId);
       
       if (conversationId) {
         toast.success("Chat started! Redirecting...");
         navigate(`/chat/${conversationId}`);
+      } else {
+        throw new Error("Failed to create conversation");
       }
     } catch (error) {
       console.error("Error starting chat:", error);

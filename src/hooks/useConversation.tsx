@@ -222,53 +222,85 @@ export const useConversation = (conversationId?: string) => {
   // Create a new conversation with another user
   const createConversation = async (otherUserId: string) => {
     if (!user?.id || !otherUserId) {
-      toast.error("Cannot create conversation");
+      toast.error("Cannot create conversation: User not authenticated");
+      console.error("Cannot create conversation: Missing user ID or other user ID");
       return null;
     }
 
     try {
+      console.log("Creating conversation between", user.id, "and", otherUserId);
+      
       // First check if a conversation already exists between these users
-      const { data: existingParticipants } = await supabase
+      const { data: existingParticipants, error: participantError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
         .eq('user_id', user.id);
+      
+      if (participantError) {
+        console.error("Error checking existing participants:", participantError);
+        throw participantError;
+      }
+
+      console.log("Found existing participant entries:", existingParticipants);
 
       if (existingParticipants && existingParticipants.length > 0) {
         const existingConversationIds = existingParticipants.map(p => p.conversation_id);
+        console.log("User is part of these conversations:", existingConversationIds);
         
-        const { data: otherParticipants } = await supabase
+        const { data: otherParticipants, error: otherParticipantsError } = await supabase
           .from('conversation_participants')
           .select('conversation_id')
           .eq('user_id', otherUserId)
           .in('conversation_id', existingConversationIds);
+        
+        if (otherParticipantsError) {
+          console.error("Error checking other participants:", otherParticipantsError);
+          throw otherParticipantsError;
+        }
+
+        console.log("Other user appears in these conversations:", otherParticipants);
 
         if (otherParticipants && otherParticipants.length > 0) {
           // Conversation already exists
-          return otherParticipants[0].conversation_id;
+          const existingConvId = otherParticipants[0].conversation_id;
+          console.log("Found existing conversation:", existingConvId);
+          return existingConvId;
         }
       }
 
+      console.log("Creating new conversation");
+      
       // Create a new conversation
       const { data: conversationData, error: conversationError } = await supabase
         .from('conversations')
-        .insert([{}])
+        .insert([{
+          last_message_at: new Date().toISOString()
+        }])
         .select();
 
-      if (conversationError || !conversationData) {
+      if (conversationError) {
+        console.error("Error creating conversation:", conversationError);
         throw conversationError;
       }
 
+      if (!conversationData || conversationData.length === 0) {
+        throw new Error("Failed to create conversation - no data returned");
+      }
+
+      console.log("Created conversation:", conversationData);
       const newConversationId = conversationData[0].id;
 
       // Add both users as participants
+      console.log("Adding participants:", user.id, otherUserId);
       const { error: participantsError } = await supabase
         .from('conversation_participants')
         .insert([
           { conversation_id: newConversationId, user_id: user.id },
-          { conversation_id: newConversationId, user_id: otherUserId },
+          { conversation_id: newConversationId, user_id: otherUserId }
         ]);
 
       if (participantsError) {
+        console.error("Error adding participants:", participantsError);
         throw participantsError;
       }
 
@@ -276,7 +308,7 @@ export const useConversation = (conversationId?: string) => {
       return newConversationId;
     } catch (err: any) {
       console.error("Error creating conversation:", err);
-      toast.error("Failed to create conversation");
+      toast.error(`Failed to create conversation: ${err.message || "Unknown error"}`);
       return null;
     }
   };
