@@ -22,10 +22,15 @@ const OnlineUsers = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [creatingChatWith, setCreatingChatWith] = useState<string | null>(null);
 
-  // Fetch available online users
+  // Fetch available online users directly from profiles table
   const fetchOnlineUsers = async () => {
     try {
-      const { data, error } = await supabase.rpc('get_available_listeners');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .eq('is_online', true)
+        .eq('is_available', true)
+        .neq('id', user?.id); // Exclude current user
       
       if (error) {
         console.error("Error fetching online users:", error);
@@ -33,7 +38,12 @@ const OnlineUsers = () => {
       }
 
       if (data) {
-        setOnlineUsers(data as OnlineUser[]);
+        // Map the data to match our OnlineUser type
+        const mappedUsers: OnlineUser[] = data.map(profile => ({
+          user_id: profile.id,
+          username: profile.username
+        }));
+        setOnlineUsers(mappedUsers);
       }
     } catch (error) {
       console.error("Error fetching online users:", error);
@@ -43,8 +53,13 @@ const OnlineUsers = () => {
   // Set current user as available when component mounts
   const setUserAvailable = async () => {
     try {
-      await supabase.rpc('set_user_available');
-      console.log("User set as available");
+      if (user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ is_online: true, is_available: true })
+          .eq('id', user.id);
+        console.log("User set as available");
+      }
     } catch (error) {
       console.error("Error setting user as available:", error);
     }
@@ -53,8 +68,13 @@ const OnlineUsers = () => {
   // Set user as unavailable when component unmounts
   const setUserUnavailable = async () => {
     try {
-      await supabase.rpc('set_user_unavailable');
-      console.log("User set as unavailable");
+      if (user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ is_online: false, is_available: false })
+          .eq('id', user.id);
+        console.log("User set as unavailable");
+      }
     } catch (error) {
       console.error("Error setting user as unavailable:", error);
     }

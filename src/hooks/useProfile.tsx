@@ -134,9 +134,9 @@ export const useProfile = (userId?: string) => {
     }
   }, [profileId]);
 
-  // Set online status on mount and cleanup on unmount
+  // Set online status on mount and cleanup on unmount - only for current user
   useEffect(() => {
-    if (user?.id && profile?.id === user?.id) {
+    if (user?.id && (!userId || userId === user?.id)) {
       updateOnlineStatus(true, true);
       
       // Set up cleanup on page close/refresh
@@ -161,7 +161,7 @@ export const useProfile = (userId?: string) => {
         updateOnlineStatus(false, false);
       };
     }
-  }, [user?.id, profile?.id]);
+  }, [user?.id, userId]);
 
   return {
     profile,
