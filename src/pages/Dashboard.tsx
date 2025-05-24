@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useConversation } from "@/hooks/useConversation";
 import { UserAvatar } from "@/components/user-avatar";
-import QuickStartChat from "@/components/QuickStartChat";
+import OnlineUsers from "@/components/OnlineUsers";
 import { 
   Heart, 
   MessageCircle, 
@@ -99,7 +99,7 @@ const Dashboard = () => {
                       Welcome back, {profile?.username || "Friend"}!
                     </h1>
                     <p className="text-gray-600">
-                      Ready to make a difference today?
+                      Connect anonymously with someone who needs support
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge variant="secondary" className="text-xs">
@@ -144,9 +144,9 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Quick Start Chat */}
+            {/* Online Users for Anonymous Chat */}
             <div className="lg:col-span-1">
-              <QuickStartChat />
+              <OnlineUsers />
             </div>
 
             {/* Recent Conversations */}
@@ -158,13 +158,13 @@ const Dashboard = () => {
                     Recent Conversations
                   </CardTitle>
                   <CardDescription>
-                    Your latest support sessions
+                    Your latest anonymous support sessions
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {conversations.length > 0 ? (
                     <div className="space-y-4">
-                      {conversations.slice(0, 3).map((conversation: any) => (
+                      {conversations.slice(0, 3).map((conversation: any, index) => (
                         <div 
                           key={conversation.id}
                           className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
@@ -173,7 +173,7 @@ const Dashboard = () => {
                           <div className="flex items-center gap-3">
                             <UserAvatar 
                               size="sm" 
-                              name="Anonymous User" 
+                              name={`User ${index + 1}`}
                               isTherapist={false} 
                             />
                             <div>
@@ -191,7 +191,7 @@ const Dashboard = () => {
                     <div className="text-center py-8">
                       <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-gray-600">No conversations yet</p>
-                      <p className="text-sm text-gray-500">Start your first conversation to help someone!</p>
+                      <p className="text-sm text-gray-500">Start your first anonymous conversation!</p>
                     </div>
                   )}
                 </CardContent>

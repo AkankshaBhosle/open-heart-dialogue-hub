@@ -87,14 +87,21 @@ export const useProfile = (userId?: string) => {
     }
   };
 
-  const updateOnlineStatus = async (isOnline: boolean) => {
+  const updateOnlineStatus = async (isOnline: boolean, isAvailable?: boolean) => {
     if (!user?.id) return;
 
     try {
+      const updates: any = { is_online: isOnline };
+      if (isAvailable !== undefined) {
+        updates.is_available = isAvailable;
+      }
+
       await supabase
         .from('profiles')
-        .update({ is_online: isOnline })
+        .update(updates)
         .eq('id', user.id);
+
+      console.log(`User ${isOnline ? 'online' : 'offline'} status updated`);
     } catch (err) {
       console.error("Error updating online status:", err);
     }
@@ -130,18 +137,28 @@ export const useProfile = (userId?: string) => {
   // Set online status on mount and cleanup on unmount
   useEffect(() => {
     if (user?.id && profile?.id === user?.id) {
-      updateOnlineStatus(true);
+      updateOnlineStatus(true, true);
       
       // Set up cleanup on page close/refresh
       const handleBeforeUnload = () => {
-        updateOnlineStatus(false);
+        updateOnlineStatus(false, false);
+      };
+      
+      const handleVisibilityChange = () => {
+        if (document.hidden) {
+          updateOnlineStatus(false, false);
+        } else {
+          updateOnlineStatus(true, true);
+        }
       };
       
       window.addEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
       
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
-        updateOnlineStatus(false);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        updateOnlineStatus(false, false);
       };
     }
   }, [user?.id, profile?.id]);

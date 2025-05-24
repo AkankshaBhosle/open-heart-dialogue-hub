@@ -22,9 +22,8 @@ const Chat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Find the other participant
+  // Find the other participant (anonymous)
   const otherParticipant = participants.find(p => p.user_id !== user?.id);
-  const otherUserProfile = otherParticipant?.profile;
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -76,21 +75,20 @@ const Chat = () => {
           <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <UserAvatar 
-                name={otherUserProfile?.username || "User"} 
-                isTherapist={otherUserProfile?.is_therapist || false} 
+                size="sm" 
+                name="Anonymous User"
+                isTherapist={false} 
               />
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="font-medium">{otherUserProfile?.username || "User"}</h2>
-                  {otherUserProfile?.is_therapist && (
-                    <span className="bg-hearmeout-green-light text-hearmeout-green-dark text-xs px-2 py-0.5 rounded-full">
-                      Therapist
-                    </span>
-                  )}
+                  <h2 className="font-medium">Anonymous User</h2>
+                  <span className="bg-hearmeout-blue-light text-hearmeout-blue-dark text-xs px-2 py-0.5 rounded-full">
+                    Anonymous
+                  </span>
                 </div>
                 <div className="flex items-center text-xs text-green-600">
                   <span className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
-                  Online now
+                  In conversation
                 </div>
               </div>
             </div>
@@ -139,11 +137,11 @@ const Chat = () => {
           <div className="max-w-3xl mx-auto space-y-4">
             <div className="text-center my-4">
               <span className="text-xs bg-gray-200 text-gray-600 rounded-full px-3 py-1">
-                Conversation started - {new Date(conversation.created_at).toLocaleString()}
+                Anonymous conversation started - {new Date(conversation.created_at).toLocaleString()}
               </span>
             </div>
             
-            {messages.map((msg) => {
+            {messages.map((msg, index) => {
               const isCurrentUser = msg.sender_id === user?.id;
               const messageTime = new Date(msg.created_at).toLocaleTimeString([], { 
                 hour: '2-digit', 
@@ -159,8 +157,8 @@ const Chat = () => {
                     {!isCurrentUser && (
                       <UserAvatar 
                         size="sm" 
-                        name={otherUserProfile?.username || "User"} 
-                        isTherapist={otherUserProfile?.is_therapist || false}
+                        name="Anonymous User"
+                        isTherapist={false}
                       />
                     )}
                     
@@ -184,7 +182,7 @@ const Chat = () => {
                     {isCurrentUser && (
                       <UserAvatar 
                         size="sm" 
-                        name={currentUserProfile?.username || "You"} 
+                        name="You"
                         isTherapist={currentUserProfile?.is_therapist || false}
                       />
                     )}
@@ -192,15 +190,6 @@ const Chat = () => {
                 </div>
               );
             })}
-            
-            {messages.length > 0 && 
-              messages[messages.length - 1].sender_id !== user?.id && (
-              <div className="text-center my-4">
-                <span className="text-xs bg-hearmeout-blue-light text-hearmeout-blue-dark rounded-full px-3 py-1">
-                  {otherUserProfile?.username || "User"} is waiting for your response
-                </span>
-              </div>
-            )}
             
             <div ref={messagesEndRef} />
           </div>
@@ -213,7 +202,7 @@ const Chat = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
+                placeholder="Type your message anonymously..."
                 className="min-h-[60px] resize-none"
               />
               
@@ -229,7 +218,7 @@ const Chat = () => {
             
             <div className="mt-2 flex justify-between items-center text-xs text-gray-500">
               <span>Press Enter to send, Shift+Enter for new line</span>
-              <span>Your identity is anonymous</span>
+              <span>🔒 Your identity is completely anonymous</span>
             </div>
           </div>
         </div>
