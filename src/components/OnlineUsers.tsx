@@ -10,10 +10,8 @@ import { toast } from 'sonner';
 import { MessageCircle, Users } from 'lucide-react';
 
 type OnlineUser = {
-  id: string;
+  user_id: string;
   username: string | null;
-  user_type: string;
-  is_therapist: boolean | null;
 };
 
 const OnlineUsers = () => {
@@ -35,13 +33,7 @@ const OnlineUsers = () => {
       }
 
       if (data) {
-        const users = data.map((item: any) => ({
-          id: item.user_id,
-          username: null, // Keep anonymous
-          user_type: 'anonymous',
-          is_therapist: false
-        }));
-        setOnlineUsers(users);
+        setOnlineUsers(data as OnlineUser[]);
       }
     } catch (error) {
       console.error("Error fetching online users:", error);
@@ -131,7 +123,7 @@ const OnlineUsers = () => {
             </h3>
             {onlineUsers.map((onlineUser, index) => (
               <div 
-                key={onlineUser.id}
+                key={onlineUser.user_id}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -151,11 +143,11 @@ const OnlineUsers = () => {
                 
                 <Button 
                   size="sm"
-                  onClick={() => startChatWithUser(onlineUser.id)}
-                  disabled={creatingChatWith === onlineUser.id}
+                  onClick={() => startChatWithUser(onlineUser.user_id)}
+                  disabled={creatingChatWith === onlineUser.user_id}
                   className="bg-hearmeout-purple hover:bg-hearmeout-purple-dark"
                 >
-                  {creatingChatWith === onlineUser.id ? "Starting..." : "Chat"}
+                  {creatingChatWith === onlineUser.user_id ? "Starting..." : "Chat"}
                 </Button>
               </div>
             ))}
