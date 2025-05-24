@@ -19,7 +19,7 @@ const OnlineUsers = () => {
   const { user } = useAuth();
   const { createConversation } = useConversation();
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [creatingChatWith, setCreatingChatWith] = useState<string | null>(null);
 
   // Fetch available online users
